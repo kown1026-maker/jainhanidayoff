@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>한의원 연월차 선착순 신청 시스템</title>
+  <!-- Pretendard 폰트 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --primary-color: #E67E22;
+      --primary-hover: #D35400;
+      --bg-color: #F8F9FA;
+      --card-bg: #FFFFFF;
+      --text-main: #2C3E50;
+      --text-muted: #7F8C8D;
+      --border-color: #E2E8F0;
+      --radius: 12px;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding-bottom: 60px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #2C3E50 0%, #1A252F 100%);
+      color: #FFFFFF;
+      padding: 40px 20px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: #BDC3C7;
+      font-size: 0.95rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto 0;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+    }
+
+    .card-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      background-color: var(--primary-color);
+      border-radius: 2px;
+    }
+
+    .rule-box {
+      background-color: #FEF5ED;
+      border-left: 4px solid var(--primary-color);
+      padding: 16px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      color: #7E4A1A;
+    }
+
+    .rule-box ul {
+      list-style: none;
+      margin-top: 6px;
+    }
+
+    .rule-box li {
+      margin-bottom: 4px;
+      position: relative;
+      padding-left: 14px;
+    }
+
+    .rule-box li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+
+    /* 타이머 및 상태 배너 */
+    .status-banner {
+      background: #2C3E50;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+    }
+
+    .status-banner.open {
+      background: #27AE60;
+    }
+
+    .auth-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .input-group {
+      margin-bottom: 14px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.15);
+    }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 12px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .user-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #F1F5F9;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    /* 관리자 모드 스타일 */
+    .admin-controls {
+      background: #F8FAFC;
+      border: 1px dashed #CBD5E1;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .admin-controls button {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      border: 1px solid #94A3B8;
+      background: white;
+      cursor: pointer;
+    }
+
+    /* 달력 그리드 */
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+
+    .day-name {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding-bottom: 8px;
+    }
+
+    .day-name.sun { color: #E74C3C; }
+    .day-name.sat { color: #3498DB; }
+
+    .day-cell {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 6px;
+      min-height: 95px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .day-cell.empty {
+      background: transparent;
+      border: none;
+    }
+
+    .day-number {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .day-cell.sun .day-number { color: #E74C3C; }
+    .day-cell.sat .day-number { color: #3498DB; }
+
+    .apply-btn {
+      width: 100%;
+      padding: 6px 0;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      border: none;
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .apply-btn:disabled {
+      background-color: #CBD5E1;
+      color: #94A3B8;
+      cursor: not-allowed;
+    }
+
+    .status-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+
+    .status-tag.closed {
+      background-color: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .status-tag.open {
+      background-color: #DCFCE7;
+      color: #166534;
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 30px 16px; }
+      header h1 { font-size: 1.5rem; }
+      .container { padding: 0 12px; margin-top: 20px; }
+      .auth-grid { grid-template-columns: 1fr; }
+      .calendar-grid { gap: 4px; }
+      .day-cell { padding: 6px 2px; min-height: 80px; }
+      .day-number { font-size: 0.8rem; }
+      .apply-btn { font-size: 0.7rem; padding: 5px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>한의원 연월차 신청 시스템</h1>
+    <p>익월 월차 선착순 신청 페이지 (매월 1일 09:00 오픈)</p>
+  </header>
+
+  <div class="container">
+
+    <!-- 규정 안내 -->
+    <div class="card">
+      <div class="card-title">연월차 신청 규정</div>
+      <div class="rule-box">
+        <ul>
+          <li><strong>오픈 일정:</strong> 매월 1일 오전 09:00 정각 자동 오픈</li>
+          <li><strong>신청 제한:</strong> 하루 최대 1명 선착순 (1인당 여러 날짜 중복 신청 가능)</li>
+          <li><strong>인증 방식:</strong> 성함과 휴대폰 번호 입력 후 즉시 신청</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 오픈 상태 타이머 배너 -->
+    <div id="status-banner" class="status-banner">
+      <span id="banner-text">⏳ 오픈 대기 중 (매월 1일 09:00 자동 오픈)</span>
+      <span id="timer-text"></span>
+    </div>
+
+    <!-- 직원 로그인 및 인증 -->
+    <div class="card">
+      <div class="card-title">직원 인증</div>
+      <div id="auth-form" class="auth-grid">
+        <div class="input-group">
+          <label for="userName">이름 (아이디)</label>
+          <input type="text" id="userName" placeholder="예: 홍길동">
+        </div>
+        <div class="input-group">
+          <label for="userPhone">휴대폰 번호</label>
+          <input type="text" id="userPhone" placeholder="01012345678">
+        </div>
+      </div>
+      <button id="login-btn" class="btn" onclick="handleLogin()">직원 인증하기</button>
+
+      <div id="user-info" class="user-status" style="display: none;">
+        <div><strong><span id="display-name"></span></strong> 님 접속 중</div>
+        <button onclick="handleLogout()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.85rem; text-decoration:underline;">로그아웃</button>
+      </div>
+    </div>
+
+    <!-- 달력 섹션 -->
+    <div class="card">
+      <div class="calendar-header">
+        <h3 id="calendar-title">2026년 12월 월차 신청</h3>
+        <span style="font-size: 0.85rem; color: var(--primary-color); font-weight: 600;">● 하루 1명 제한</span>
+      </div>
+
+      <div class="calendar-grid">
+        <div class="day-name sun">일</div>
+        <div class="day-name">월</div>
+        <div class="day-name">화</div>
+        <div class="day-name">수</div>
+        <div class="day-name">목</div>
+        <div class="day-name">금</div>
+        <div class="day-name sat">토</div>
+
+        <div id="calendar-days" style="display: contents;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // [설정] 구글 앱스 스크립트(GAS) 배포 웹앱 URL을 아래에 입력하세요.
+    const GAS_WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+    let currentUser = null;
+    let isSystemOpen = false; // 수동 제어 또는 타이머에 의해 결정
+
+    // 각 날짜별 상태 데이터 (관리자 제어 및 마감 여부)
+    // 구조: "YYYY-MM-DD": { closed: boolean, applicant: "이름" }
+    let dateStatus = {};
+
+    // 임시 테스트를 위한 12월 달력 생성 (2026년 12월 기준)
+    function renderCalendar() {
+      const container = document.getElementById('calendar-days');
+      container.innerHTML = '';
+
+      // 12월 1일은 화요일 (빈 셀 2개)
+      for (let i = 0; i < 2; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'day-cell empty';
+        container.appendChild(emptyCell);
+      }
+
+      const totalDays = 31;
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `2026-12-${day < 10 ? '0' + day : day}`;
+        const dayOfWeek = (day + 1) % 7;
+
+        if(!dateStatus[dateStr]) {
+          dateStatus[dateStr] = { closed: false, applicant: null };
+        }
+
+        const cellData = dateStatus[dateStr];
+        const cell = document.createElement('div');
+        cell.className = 'day-cell';
+        if (dayOfWeek === 0) cell.classList.add('sun');
+        if (dayOfWeek === 6) cell.classList.add('sat');
+
+        let buttonHtml = '';
+        if (cellData.closed) {
+          buttonHtml = `
+            <span class="status-tag closed">마감 (${cellData.applicant})</span>
+            <button class="apply-btn" disabled>마감됨</button>
+          `;
+        } else {
+          buttonHtml = `
+            <span class="status-tag open">신청 가능</span>
+            <button class="apply-btn" ${!isSystemOpen ? 'disabled' : ''} onclick="applyLeave('${dateStr}')">신청하기</button>
+          `;
+        }
+
+        // 관리자용 강제 열기/마감 컨트롤 (원장님 편의용)
+        cell.innerHTML = `
+          <div class="day-number">${day}</div>
+          ${buttonHtml}
+          <div class="admin-controls" style="display:none;" id="admin-${dateStr}">
+            <button onclick="adminToggle('${dateStr}', false)">열기</button>
+            <button onclick="adminToggle('${dateStr}', true)">마감</button>
+          </div>
+        `;
+        container.appendChild(cell);
+      }
+
+      // 관리자 로그인 상태면 관리자 컨트롤 노출
+      if(currentUser && currentUser.name === '원장님') {
+        document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'flex');
+      }
+    }
+
+    // 직원 인증
+    function handleLogin() {
+      const name = document.getElementById('userName').value.trim();
+      const phone = document.getElementById('userPhone').value.trim();
+
+      if (!name || !phone) {
+        alert("이름과 휴대폰 번호를 모두 입력해 주세요.");
+        return;
+      }
+
+      currentUser = { name, phone };
+      document.getElementById('display-name').innerText = name;
+      document.getElementById('auth-form').style.display = 'none';
+      document.getElementById('login-btn').style.display = 'none';
+      document.getElementById('user-info').style.display = 'flex';
+
+      alert(`${name}님 환영합니다!`);
+      renderCalendar();
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      document.getElementById('auth-form').style.display = 'grid';
+      document.getElementById('login-btn').style.display = 'block';
+      document.getElementById('user-info').style.display = 'none';
+      renderCalendar();
+    }
+
+    // 관리자 수동 열기/마감 기능
+    function adminToggle(dateStr, closeState) {
+      dateStatus[dateStr].closed = closeState;
+      if(closeState && !dateStatus[dateStr].applicant) {
+        dateStatus[dateStr].applicant = "관리자마감";
+      } else if(!closeState) {
+        dateStatus[dateStr].applicant = null;
+      }
+      renderCalendar();
+    }
+
+    // 연차 신청 기능 (구글 시트 연동 포함)
+    async function applyLeave(dateStr) {
+      if (!currentUser) {
+        alert("먼저 상단에서 직원 인증을 완료해 주세요.");
+        return;
+      }
+      if (!isSystemOpen) {
+        alert("아직 신청 오픈 시간이 아닙니다.");
+        return;
+      }
+      if (dateStatus[dateStr].closed) {
+        alert("이미 마감된 날짜입니다.");
+        return;
+      }
+
+      if (!confirm(`${dateStr} 날짜로 연차를 신청하시겠습니까? (중복 신청 가능)`)) return;
+
+      // 로컬 상태 마감 처리 (하루 1명 선착순)
+      dateStatus[dateStr].closed = true;
+      dateStatus[dateStr].applicant = currentUser.name;
+      renderCalendar();
+
+      // 구글 시트(GAS) 전송 데이터
+      const payload = {
+        timestamp: new Date().toISOString(),
+        name: currentUser.name,
+        phone: currentUser.phone,
+        date: dateStr
+      };
+
+      if (GAS_WEB_APP_URL === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE") {
+        alert(`[신청 완료] ${dateStr} 연차 신청이 완료되었습니다. (구글 시트 연동 URL 설정 필요)`);
+        return;
+      }
+
+      try {
+        await fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        alert(`[신청 완료] ${dateStr} 연차 신청이 성공적으로 접수 및 구글 시트에 기록되었습니다.`);
+      } catch (error) {
+        console.error(error);
+        alert("신청은 완료되었으나 구글 시트 전송 중 오류가 발생했습니다.");
+      }
+    }
+
+    // 오픈 타이머 및 자동 활성화 로직
+    function checkOpenStatus() {
+      const now = new Date();
+      // 테스트를 위해 강제로 오픈 상태로 두려면 아래 isSystemOpen = true로 변경 가능
+      // 실제 운영 시 매월 1일 09:00 정각 체크
+      
+      // 예시: 매월 1일 9시 오픈 조건 (테스트를 위해 현재는 수동 오픈 또는 테스트 일시 지정 가능)
+      // 본 예시에서는 데모를 위해 기본적으로 오픈 상태를 false로 두고, 
+      // 테스트를 원하시면 아래를 true로 바꾸거나 관리자 계정('원장님')으로 로그인해 열 수 있습니다.
+      
+      // 테스트 편의를 위해 기본적으로 타이머가 작동하되, 
+      // 이름을 '원장님'으로 로그인하면 관리자 권한으로 강제 열기/마감 가능
+      
+      // 임시 오픈 상태 (필요에 따라 true로 설정 가능)
+      isSystemOpen = true; 
+      
+      const banner = document.getElementById('status-banner');
+      const bannerText = document.getElementById('banner-text');
+      
+      if (isSystemOpen) {
+        banner.className = "status-banner open";
+        bannerText.innerHTML = "🟢 연월차 신청이 오픈되었습니다! 원하는 날짜를 선착순으로 신청하세요.";
+      }
+      renderCalendar();
+    }
+
+    checkOpenStatus();
+  </script>
+</body>
+</html>
